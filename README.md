@@ -63,6 +63,24 @@ bootstrap is the reliable pattern for a notch/agent app, and the notch panel is 
 open build/Adhder.app
 ```
 
+## Package for distribution
+
+```bash
+./scripts/package.sh
+# -> dist/Adhder-<version>.dmg  (drag-to-install, with Applications symlink)
+# -> dist/Adhder-<version>.zip
+```
+
+The app is ad-hoc signed with a hardened runtime, which is enough to run on your
+own Mac and to receive the Calendar (EventKit) permission prompt. To distribute
+to other machines without Gatekeeper warnings you'd sign with a Developer ID
+certificate and notarize; that's a drop-in change to `scripts/build_app.sh`.
+
+### Install
+Open the DMG and drag **Adhder** to **Applications**, then launch it. It lives in
+the menu bar (no Dock icon). Grant Calendar access on first launch, and use
+**Start at login** from the menu bar to have it launch automatically.
+
 The app runs in the menu bar (no Dock icon). On first launch macOS asks for Calendar
 access. Use the menu bar **Test reminder** item to preview Pip without waiting for a meeting.
 
