@@ -84,6 +84,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Test reminder", action: #selector(testReminder), keyEquivalent: "t"))
         menu.addItem(NSMenuItem(title: "Refresh calendar", action: #selector(refreshCalendar), keyEquivalent: "r"))
+
+        let launchItem = NSMenuItem(title: "Start at login",
+                                    action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
+        launchItem.state = LaunchAtLogin.isEnabled ? .on : .off
+        menu.addItem(launchItem)
+
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit Adhder", action: #selector(quit), keyEquivalent: "q"))
 
@@ -101,6 +107,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func testReminder() { notchModel.previewAlert() }
     @objc private func refreshCalendar() { calendar.refresh() }
+
+    @objc private func toggleLaunchAtLogin() {
+        LaunchAtLogin.toggle()
+        rebuildMenu()
+    }
     @objc private func grantAccess() { calendar.requestAccess() }
 
     @objc private func openPrivacySettings() {

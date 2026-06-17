@@ -10,6 +10,18 @@ MainActor.assumeIsolated {
         exit(0)
     }
 
+    // Login-item control for scripting/testing: `Adhder --login on|off|status`.
+    if let i = CommandLine.arguments.firstIndex(of: "--login"), i + 1 < CommandLine.arguments.count {
+        let arg = CommandLine.arguments[i + 1]
+        switch arg {
+        case "on": LaunchAtLogin.set(true)
+        case "off": LaunchAtLogin.set(false)
+        default: break
+        }
+        FileHandle.standardOutput.write(Data("login-at-startup: \(LaunchAtLogin.isEnabled)\n".utf8))
+        exit(0)
+    }
+
     let delegate = AppDelegate()
     app.delegate = delegate
     app.setActivationPolicy(.accessory)
