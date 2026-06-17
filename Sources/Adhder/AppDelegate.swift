@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var cancellables = Set<AnyCancellable>()
     private var signalSource: DispatchSourceSignal?
+    private var longSignalSource: DispatchSourceSignal?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         calendar.start()
@@ -35,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// Allow firing a test reminder from the terminal: `kill -USR1 <pid>`.
+    /// `kill -USR2 <pid>` fires a long-title sample to demo the marquee.
     private func setupTestSignal() {
         signal(SIGUSR1, SIG_IGN)
         let source = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: .main)
@@ -43,6 +45,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         source.resume()
         signalSource = source
+
+        signal(SIGUSR2, SIG_IGN)
+        let longSource = DispatchSource.makeSignalSource(signal: SIGUSR2, queue: .main)
+        longSource.setEventHandler { [weak self] in
+            self?.notchModel.previewAlert(title: "Weekly Engineering Sync — Roadmap, Incidents & Q3 Planning Review")
+        }
+        longSource.resume()
+        longSignalSource = longSource
     }
 
     private func setupStatusItem() {

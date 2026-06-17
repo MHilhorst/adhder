@@ -172,10 +172,9 @@ private struct PeekView: View {
                     .foregroundStyle(.white.opacity(0.85))
 
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(meeting.title)
-                        .font(.system(size: 12.5, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
+                    MarqueeText(text: meeting.title,
+                                font: .system(size: 12.5, weight: .semibold),
+                                color: .white)
                     Text("\(meeting.clockTime) · \(meeting.relativeStartDescription)")
                         .font(.system(size: 11, weight: .medium))
                         .monospacedDigit()
@@ -194,15 +193,7 @@ private struct PeekView: View {
                             .foregroundStyle(.white)
                             .padding(.horizontal, 11)
                             .padding(.vertical, 5)
-                            .background(
-                                Capsule().fill(
-                                    LinearGradient(
-                                        colors: [meeting.calendarColor.vividColor.brightnessScaled(1.18),
-                                                 meeting.calendarColor.vividColor.brightnessScaled(0.86)],
-                                        startPoint: .top, endPoint: .bottom
-                                    )
-                                )
-                            )
+                            .background(Capsule().fill(Theme.accentGradient))
                     }
                     .buttonStyle(PressableButtonStyle())
                 }

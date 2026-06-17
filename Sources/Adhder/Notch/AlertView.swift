@@ -7,7 +7,7 @@ struct AlertView: View {
     let meeting: MeetingEvent
     var forceVisible: Bool = false
 
-    private var accent: Color { meeting.calendarColor.vividColor }
+    private var accent: Color { Theme.accent }
 
     private var eyebrow: String {
         if meeting.isInProgress { return "Happening now" }
@@ -18,18 +18,17 @@ struct AlertView: View {
 
     var body: some View {
         HStack(spacing: 13) {
-            MeetingGlyph(accent: accent, forceVisible: forceVisible)
+            MeetingGlyph(forceVisible: forceVisible)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(eyebrow.uppercased())
                     .font(.system(size: 10, weight: .semibold))
                     .tracking(0.6)
-                    .foregroundStyle(accent.opacity(0.95))
+                    .foregroundStyle(accent)
 
-                Text(meeting.title)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
+                MarqueeText(text: meeting.title,
+                            font: .system(size: 15, weight: .semibold),
+                            color: .white)
 
                 HStack(spacing: 6) {
                     Text(meeting.clockTime)
@@ -67,17 +66,12 @@ struct AlertView: View {
                     .padding(.vertical, 8)
                     .background(
                         Capsule()
-                            .fill(
-                                LinearGradient(
-                                    colors: [accent.brightnessScaled(1.18), accent.brightnessScaled(0.86)],
-                                    startPoint: .top, endPoint: .bottom
-                                )
-                            )
+                            .fill(Theme.accentGradient)
                             .overlay(
                                 Capsule().strokeBorder(Color.white.opacity(0.22), lineWidth: 0.5)
                             )
                     )
-                    .shadow(color: accent.opacity(0.35), radius: 4, y: 1)
+                    .shadow(color: Theme.accent.opacity(0.35), radius: 4, y: 1)
                 }
                 .buttonStyle(PressableButtonStyle())
             }

@@ -113,12 +113,17 @@ final class NotchViewModel: ObservableObject {
         }
     }
 
-    /// Manually preview the character (used by the menu "Test reminder" action).
-    func previewAlert() {
-        let sample = calendar.nextMeeting ?? MeetingEvent(
+    /// Manually preview the alert (used by the menu "Test reminder" action).
+    /// Pass a title to force a specific sample (e.g. to demo the marquee).
+    func previewAlert(title customTitle: String? = nil) {
+        if customTitle == nil, let next = calendar.nextMeeting {
+            triggerAlert(for: next)
+            return
+        }
+        let sample = MeetingEvent(
             id: "preview",
-            title: "Design sync",
-            startDate: Date().addingTimeInterval(120),
+            title: customTitle ?? "Design sync",
+            startDate: Date().addingTimeInterval(45),
             endDate: Date().addingTimeInterval(1800),
             location: "Zoom",
             organizer: "You",

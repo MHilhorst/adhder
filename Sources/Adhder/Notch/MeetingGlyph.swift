@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// A clean, calm meeting badge: a single calendar-colored squircle with a
-/// glyph and a top-lit sheen. No halos, no pulse rings — restraint over noise.
+/// A clean, calm meeting badge: a single brand-colored squircle with a glyph and
+/// a top-lit sheen. No halos, no pulse rings — restraint over noise.
 struct MeetingGlyph: View {
-    var accent: Color
     var symbol: String = "video.fill"
     var forceVisible: Bool = false
 
@@ -11,12 +10,7 @@ struct MeetingGlyph: View {
 
     var body: some View {
         RoundedRectangle(cornerRadius: 13, style: .continuous)
-            .fill(
-                LinearGradient(
-                    colors: [accent.opacity(0.95), accent.opacity(0.78)],
-                    startPoint: .top, endPoint: .bottom
-                )
-            )
+            .fill(Theme.accentGradient)
             .overlay(
                 // Subtle top sheen for depth.
                 RoundedRectangle(cornerRadius: 13, style: .continuous)
@@ -37,7 +31,7 @@ struct MeetingGlyph: View {
                     .foregroundStyle(.white)
             )
             .frame(width: 44, height: 44)
-            .shadow(color: accent.opacity(0.25), radius: 3, y: 2)
+            .shadow(color: Theme.accent.opacity(0.25), radius: 3, y: 2)
             .scaleEffect(appeared || forceVisible ? 1 : 0.7)
             .opacity(appeared || forceVisible ? 1 : 0)
             .onAppear {
