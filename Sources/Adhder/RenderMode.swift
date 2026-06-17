@@ -99,7 +99,7 @@ private struct NotchSnapshot: View {
                         .foregroundStyle(.white.opacity(0.6))
                         .frame(width: 26, height: 26)
                         .background(Circle().fill(Color.white.opacity(0.12)))
-                        .padding(.trailing, 14)
+                        .padding(.trailing, 20)
                         .frame(height: geometry.notchHeight, alignment: .center)
                 }
             }

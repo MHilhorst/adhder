@@ -84,7 +84,7 @@ struct NotchView: View {
                             .contentShape(Circle())
                     }
                     .buttonStyle(PressableButtonStyle())
-                    .padding(.trailing, 14)
+                    .padding(.trailing, 20)
                     .frame(height: geometry.notchHeight, alignment: .center)
                     .opacity(contentVisible ? 1 : 0)
                 }
