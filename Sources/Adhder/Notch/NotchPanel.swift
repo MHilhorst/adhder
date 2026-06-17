@@ -39,6 +39,7 @@ final class NotchController {
     private let model: NotchViewModel
     private var geometry: NotchGeometry
     private var cancellables = Set<AnyCancellable>()
+    private var hoverTimer: Timer?
 
     init(model: NotchViewModel) {
         self.model = model
@@ -46,6 +47,8 @@ final class NotchController {
 
         let initial = NotchController.frame(for: .collapsed, geometry: geometry)
         self.panel = NotchPanel(contentRect: initial)
+        // Idle notch must never intercept clicks or hover over the menu bar.
+        panel.ignoresMouseEvents = true
 
         let root = NotchView(model: model, geometry: geometry)
         let hosting = NSHostingView(rootView: root)
@@ -54,6 +57,44 @@ final class NotchController {
 
         panel.orderFrontRegardless()
         observe()
+        startHoverPolling()
+    }
+
+    /// Poll the cursor instead of relying on window hover, so the collapsed
+    /// panel can stay fully click-through while still expanding on intentional hover.
+    private func startHoverPolling() {
+        hoverTimer = Timer.scheduledTimer(withTimeInterval: 0.12, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.pollHover() }
+        }
+    }
+
+    private func pollHover() {
+        // Never auto-collapse an active alert; it manages its own lifecycle.
+        guard model.activeAlert == nil else { return }
+
+        let mouse = NSEvent.mouseLocation
+        let screen = geometry.screenFrame
+        let triggerWidth = geometry.notchWidth + 16
+        let triggerRect = NSRect(
+            x: screen.midX - triggerWidth / 2,
+            y: screen.maxY - (geometry.notchHeight + 12),
+            width: triggerWidth,
+            height: geometry.notchHeight + 12
+        )
+
+        switch model.presentation {
+        case .collapsed:
+            if triggerRect.contains(mouse) {
+                model.hoverChanged(true)
+            }
+        case .peek:
+            // Stay open while the cursor is anywhere over the expanded panel.
+            if !panel.frame.insetBy(dx: -4, dy: -4).contains(mouse) {
+                model.hoverChanged(false)
+            }
+        case .alert:
+            break
+        }
     }
 
     private func observe() {
@@ -77,6 +118,9 @@ final class NotchController {
     }
 
     private func resize(to presentation: NotchViewModel.Presentation) {
+        // Click-through when collapsed; interactive (buttons) when expanded.
+        panel.ignoresMouseEvents = (presentation == .collapsed)
+
         let frame = NotchController.frame(for: presentation, geometry: geometry)
         NSAnimationContext.runAnimationGroup { ctx in
             ctx.duration = 0.42

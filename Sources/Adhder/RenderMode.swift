@@ -59,8 +59,8 @@ private struct NotchSnapshot: View {
     private var size: CGSize {
         switch state {
         case .collapsed: return CGSize(width: geometry.notchWidth, height: geometry.notchHeight)
-        case .peek: return CGSize(width: max(geometry.notchWidth + 210, 400), height: geometry.notchHeight + 34)
-        case .alert: return CGSize(width: 430, height: geometry.notchHeight + 72)
+        case .peek: return CGSize(width: max(geometry.notchWidth + 200, 400), height: geometry.notchHeight + 34)
+        case .alert: return CGSize(width: 440, height: geometry.notchHeight + 78)
         }
     }
 
@@ -69,8 +69,8 @@ private struct NotchSnapshot: View {
     private var contentInsets: EdgeInsets {
         switch state {
         case .collapsed: return EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8)
-        case .peek: return EdgeInsets(top: geometry.notchHeight * 0.5, leading: 16, bottom: 8, trailing: 14)
-        case .alert: return EdgeInsets(top: geometry.notchHeight + 4, leading: 16, bottom: 14, trailing: 14)
+        case .peek: return EdgeInsets(top: geometry.notchHeight * 0.5, leading: 22, bottom: 9, trailing: 18)
+        case .alert: return EdgeInsets(top: geometry.notchHeight + 8, leading: 24, bottom: 18, trailing: 20)
         }
     }
 

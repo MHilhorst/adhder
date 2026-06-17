@@ -10,6 +10,21 @@ MainActor.assumeIsolated {
         exit(0)
     }
 
+    // Geometry diagnostic: `Adhder --geometry` prints resolved notch metrics and exits.
+    if CommandLine.arguments.contains("--geometry") {
+        for screen in NSScreen.screens {
+            let g = NotchGeometry.resolve(for: screen)
+            let f = screen.frame
+            let safe = screen.safeAreaInsets
+            FileHandle.standardOutput.write(Data("""
+            screen frame=\(f) safeTop=\(safe.top) auxL=\(String(describing: screen.auxiliaryTopLeftArea)) auxR=\(String(describing: screen.auxiliaryTopRightArea))
+              -> notchWidth=\(g.notchWidth) notchHeight=\(g.notchHeight) hardwareNotch=\(g.hasHardwareNotch)
+
+            """.utf8))
+        }
+        exit(0)
+    }
+
     // Login-item control for scripting/testing: `Adhder --login on|off|status`.
     if let i = CommandLine.arguments.firstIndex(of: "--login"), i + 1 < CommandLine.arguments.count {
         let arg = CommandLine.arguments[i + 1]

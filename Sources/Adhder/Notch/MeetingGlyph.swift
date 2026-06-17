@@ -37,7 +37,7 @@ struct MeetingGlyph: View {
                     .foregroundStyle(.white)
             )
             .frame(width: 44, height: 44)
-            .shadow(color: accent.opacity(0.35), radius: 5, y: 2)
+            .shadow(color: accent.opacity(0.25), radius: 3, y: 2)
             .scaleEffect(appeared || forceVisible ? 1 : 0.7)
             .opacity(appeared || forceVisible ? 1 : 0)
             .onAppear {
