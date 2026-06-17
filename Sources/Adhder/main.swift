@@ -10,6 +10,12 @@ MainActor.assumeIsolated {
         exit(0)
     }
 
+    // App-icon rasterizer: `Adhder --icon <path.png>` writes a 1024px master and exits.
+    if let i = CommandLine.arguments.firstIndex(of: "--icon"), i + 1 < CommandLine.arguments.count {
+        RenderMode.renderIcon(to: CommandLine.arguments[i + 1])
+        exit(0)
+    }
+
     // Geometry diagnostic: `Adhder --geometry` prints resolved notch metrics and exits.
     if CommandLine.arguments.contains("--geometry") {
         for screen in NSScreen.screens {

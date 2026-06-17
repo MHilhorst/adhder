@@ -26,6 +26,10 @@ cp "$BIN" "$CONTENTS/MacOS/Adhder"
 cp "$ROOT/scripts/Info.plist" "$CONTENTS/Info.plist"
 printf 'APPL????' > "$CONTENTS/PkgInfo"
 
+if [[ -f "$ROOT/scripts/AppIcon.icns" ]]; then
+  cp "$ROOT/scripts/AppIcon.icns" "$CONTENTS/Resources/AppIcon.icns"
+fi
+
 echo "==> Code signing (ad-hoc)"
 codesign --force --sign - \
   --entitlements "$ROOT/scripts/Adhder.entitlements" \

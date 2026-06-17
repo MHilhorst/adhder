@@ -36,6 +36,16 @@ enum RenderMode {
         return true
     }
 
+    static func renderIcon(to path: String) {
+        let renderer = ImageRenderer(content: AppIconView(size: 1024).frame(width: 1024, height: 1024))
+        renderer.scale = 1
+        guard let nsImage = renderer.nsImage,
+              let tiff = nsImage.tiffRepresentation,
+              let rep = NSBitmapImageRep(data: tiff),
+              let png = rep.representation(using: .png, properties: [:]) else { return }
+        try? png.write(to: URL(fileURLWithPath: path))
+    }
+
     private static func render<V: View>(_ view: V, to path: String, size: CGSize) {
         let renderer = ImageRenderer(content:
             view.frame(width: size.width, height: size.height)
