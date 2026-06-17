@@ -1,87 +1,96 @@
 import SwiftUI
 
-/// The full character takeover: Pip waves and announces the meeting.
+/// The full meeting reminder: a calm, premium dark card with a colored badge,
+/// the meeting details, and a single primary Join action.
 struct AlertView: View {
     @ObservedObject var model: NotchViewModel
     let meeting: MeetingEvent
+    var forceVisible: Bool = false
 
     private var accent: Color { meeting.calendarColor.color }
 
-    private var headline: String {
-        if meeting.isInProgress { return "Your meeting just started!" }
+    private var eyebrow: String {
+        if meeting.isInProgress { return "Happening now" }
         let secs = meeting.secondsUntilStart
-        if secs <= 60 { return "Starting any second now!" }
-        return "Heads up — meeting soon!"
+        if secs <= 60 { return "Starting now" }
+        return "Meeting soon"
     }
 
     var body: some View {
-        HStack(spacing: 14) {
-            MeetingGlyph(accent: accent)
-                .frame(width: 64, height: 64)
+        HStack(spacing: 13) {
+            MeetingGlyph(accent: accent, forceVisible: forceVisible)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text(headline)
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(accent)
-                    .textCase(.uppercase)
-                    .tracking(0.4)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(eyebrow.uppercased())
+                    .font(.system(size: 10, weight: .semibold))
+                    .tracking(0.6)
+                    .foregroundStyle(accent.opacity(0.95))
 
                 Text(meeting.title)
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.white)
                     .lineLimit(1)
 
-                HStack(spacing: 8) {
-                    Label(meeting.clockTime, systemImage: "clock.fill")
+                HStack(spacing: 6) {
+                    Text(meeting.clockTime)
+                        .monospacedDigit()
                     Text("·")
+                        .foregroundStyle(.white.opacity(0.3))
                     Text(meeting.relativeStartDescription)
+                        .monospacedDigit()
                     if let location = meeting.location, !location.isEmpty {
                         Text("·")
-                        Label(location, systemImage: "mappin.and.ellipse")
+                            .foregroundStyle(.white.opacity(0.3))
+                        Text(location)
                             .lineLimit(1)
                     }
                 }
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.white.opacity(0.6))
+                .font(.system(size: 11.5, weight: .medium))
+                .foregroundStyle(.white.opacity(0.5))
             }
 
-            Spacer(minLength: 8)
+            Spacer(minLength: 10)
 
-            VStack(spacing: 8) {
-                if meeting.joinURL != nil {
-                    Button {
-                        model.join(meeting)
-                    } label: {
-                        HStack(spacing: 5) {
-                            Image(systemName: "video.fill")
-                            Text("Join")
-                        }
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(
-                            Capsule().fill(
-                                LinearGradient(colors: [accent, accent.opacity(0.75)],
-                                               startPoint: .top, endPoint: .bottom)
-                            )
-                        )
-                        .shadow(color: accent.opacity(0.6), radius: 8, y: 3)
-                    }
-                    .buttonStyle(PressableButtonStyle())
-                }
-
+            if meeting.joinURL != nil {
                 Button {
-                    model.dismissAlert()
+                    model.join(meeting)
                 } label: {
-                    Text("Dismiss")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.55))
+                    HStack(spacing: 6) {
+                        Image(systemName: "video.fill")
+                            .font(.system(size: 11, weight: .semibold))
+                        Text("Join")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.leading, 11)
+                    .padding(.trailing, 14)
+                    .padding(.vertical, 8)
+                    .background(
+                        Capsule()
+                            .fill(accent)
+                            .overlay(
+                                Capsule().strokeBorder(Color.white.opacity(0.18), lineWidth: 0.5)
+                            )
+                    )
+                    .shadow(color: accent.opacity(0.3), radius: 3, y: 1)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(PressableButtonStyle())
             }
         }
-        .frame(maxWidth: .infinity)
+        .padding(.leading, 4)
+        .overlay(alignment: .topTrailing) {
+            Button {
+                model.dismissAlert()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.45))
+                    .frame(width: 18, height: 18)
+                    .background(Circle().fill(Color.white.opacity(0.08)))
+            }
+            .buttonStyle(.plain)
+            .offset(x: 2, y: -6)
+        }
     }
 }
 
@@ -89,7 +98,7 @@ struct AlertView: View {
 struct PressableButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.92 : 1)
+            .scaleEffect(configuration.isPressed ? 0.94 : 1)
             .animation(.spring(response: 0.25, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }

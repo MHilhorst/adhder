@@ -40,14 +40,11 @@ final class NotchController {
     private var geometry: NotchGeometry
     private var cancellables = Set<AnyCancellable>()
 
-    /// Extra room around the notch shape so shadows and the bouncing character don't clip.
-    private let padding = NSEdgeInsets(top: 0, left: 60, bottom: 80, right: 60)
-
     init(model: NotchViewModel) {
         self.model = model
         self.geometry = NotchGeometry.resolve()
 
-        let initial = NotchController.frame(for: .collapsed, geometry: geometry, padding: padding)
+        let initial = NotchController.frame(for: .collapsed, geometry: geometry)
         self.panel = NotchPanel(contentRect: initial)
 
         let root = NotchView(model: model, geometry: geometry)
@@ -80,7 +77,7 @@ final class NotchController {
     }
 
     private func resize(to presentation: NotchViewModel.Presentation) {
-        let frame = NotchController.frame(for: presentation, geometry: geometry, padding: padding)
+        let frame = NotchController.frame(for: presentation, geometry: geometry)
         NSAnimationContext.runAnimationGroup { ctx in
             ctx.duration = 0.42
             ctx.timingFunction = CAMediaTimingFunction(controlPoints: 0.32, 0.9, 0.32, 1)
@@ -89,21 +86,31 @@ final class NotchController {
     }
 
     /// Compute the panel frame for a given state, centered on the notch and pinned to the top.
+    /// Collapsed keeps the window tiny (just a hover strip under the notch) so the
+    /// transparent panel never intercepts clicks or covers content across the top of the screen.
     private static func frame(for presentation: NotchViewModel.Presentation,
-                              geometry: NotchGeometry,
-                              padding: NSEdgeInsets) -> NSRect {
+                              geometry: NotchGeometry) -> NSRect {
         let contentSize: CGSize
+        let sidePadding: CGFloat
+        let bottomPadding: CGFloat
+
         switch presentation {
         case .collapsed:
-            contentSize = CGSize(width: geometry.notchWidth + 12, height: geometry.notchHeight + 8)
+            contentSize = CGSize(width: geometry.notchWidth, height: geometry.notchHeight + 10)
+            sidePadding = 0
+            bottomPadding = 0
         case .peek:
-            contentSize = CGSize(width: max(geometry.notchWidth + 240, 420), height: geometry.notchHeight + 28)
+            contentSize = CGSize(width: max(geometry.notchWidth + 210, 400), height: geometry.notchHeight + 34)
+            sidePadding = 36
+            bottomPadding = 34
         case .alert:
-            contentSize = CGSize(width: 460, height: 168)
+            contentSize = CGSize(width: 430, height: geometry.notchHeight + 72)
+            sidePadding = 44
+            bottomPadding = 44
         }
 
-        let totalWidth = contentSize.width + padding.left + padding.right
-        let totalHeight = contentSize.height + padding.bottom
+        let totalWidth = contentSize.width + sidePadding * 2
+        let totalHeight = contentSize.height + bottomPadding
 
         let screen = geometry.screenFrame
         let x = screen.midX - totalWidth / 2

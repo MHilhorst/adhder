@@ -11,9 +11,21 @@ struct NotchView: View {
         case .collapsed:
             return CGSize(width: geometry.notchWidth, height: geometry.notchHeight)
         case .peek:
-            return CGSize(width: max(geometry.notchWidth + 240, 420), height: geometry.notchHeight + 28)
+            return CGSize(width: max(geometry.notchWidth + 210, 400), height: geometry.notchHeight + 34)
         case .alert:
-            return CGSize(width: 460, height: 168)
+            return CGSize(width: 430, height: geometry.notchHeight + 72)
+        }
+    }
+
+    /// Insets so content always clears the physical notch lip at the top.
+    private var contentInsets: EdgeInsets {
+        switch model.presentation {
+        case .collapsed:
+            return EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8)
+        case .peek:
+            return EdgeInsets(top: geometry.notchHeight * 0.5, leading: 16, bottom: 8, trailing: 14)
+        case .alert:
+            return EdgeInsets(top: geometry.notchHeight + 4, leading: 16, bottom: 14, trailing: 14)
         }
     }
 
@@ -27,21 +39,22 @@ struct NotchView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ZStack {
+            ZStack(alignment: .top) {
+                // Collapsed is fully transparent so it never covers menu-bar or
+                // window text beside the physical notch. The dark surface only
+                // appears when expanded into peek/alert.
                 NotchShape(bottomRadius: bottomRadius, topRadius: 10)
-                    .fill(Color.black)
+                    .fill(surfaceColor)
                     .overlay(
                         NotchShape(bottomRadius: bottomRadius, topRadius: 10)
                             .stroke(strokeGradient, lineWidth: 0.8)
                             .opacity(model.presentation == .collapsed ? 0 : 1)
                     )
-                    .shadow(color: .black.opacity(model.presentation == .alert ? 0.5 : 0.25),
-                            radius: model.presentation == .alert ? 24 : 8, y: 8)
+                    .shadow(color: .black.opacity(shadowOpacity),
+                            radius: model.presentation == .alert ? 22 : 10, y: 8)
 
                 content
-                    .padding(.horizontal, 16)
-                    .padding(.top, geometry.notchHeight * 0.15)
-                    .padding(.bottom, 10)
+                    .padding(contentInsets)
             }
             .frame(width: size.width, height: size.height)
             .animation(.spring(response: 0.5, dampingFraction: 0.74), value: model.presentation)
@@ -66,6 +79,18 @@ struct NotchView: View {
                 AlertView(model: model, meeting: meeting)
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
+        }
+    }
+
+    private var surfaceColor: Color {
+        model.presentation == .collapsed ? Color.clear : Color.black
+    }
+
+    private var shadowOpacity: Double {
+        switch model.presentation {
+        case .collapsed: return 0
+        case .peek: return 0.25
+        case .alert: return 0.45
         }
     }
 
@@ -114,20 +139,21 @@ private struct PeekView: View {
     @ObservedObject var model: NotchViewModel
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 11) {
             if let meeting = model.calendar.nextMeeting {
-                Image(systemName: "calendar.badge.clock")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.9))
+                Image(systemName: "calendar")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.85))
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 1) {
                     Text(meeting.title)
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 12.5, weight: .semibold))
                         .foregroundStyle(.white)
                         .lineLimit(1)
                     Text("\(meeting.clockTime) · \(meeting.relativeStartDescription)")
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.6))
+                        .monospacedDigit()
+                        .foregroundStyle(.white.opacity(0.5))
                         .lineLimit(1)
                 }
 
@@ -138,16 +164,17 @@ private struct PeekView: View {
                         model.join(meeting)
                     } label: {
                         Text("Join")
-                            .font(.system(size: 12, weight: .bold))
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
+                            .padding(.horizontal, 11)
                             .padding(.vertical, 5)
                             .background(Capsule().fill(meeting.calendarColor.color))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(PressableButtonStyle())
                 }
             } else {
                 Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 13))
                     .foregroundStyle(.green)
                 Text("No upcoming meetings")
                     .font(.system(size: 12, weight: .medium))

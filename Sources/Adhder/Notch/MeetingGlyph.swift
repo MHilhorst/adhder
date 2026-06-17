@@ -1,51 +1,47 @@
 import SwiftUI
 
-/// A clean, Apple-style animated badge shown in the alert instead of a mascot:
-/// a rounded squircle in the calendar's color with a video glyph and a soft
-/// pulsing ring to draw the eye without being noisy.
+/// A clean, calm meeting badge: a single calendar-colored squircle with a
+/// glyph and a top-lit sheen. No halos, no pulse rings — restraint over noise.
 struct MeetingGlyph: View {
     var accent: Color
     var symbol: String = "video.fill"
+    var forceVisible: Bool = false
 
-    @State private var pulse = false
     @State private var appeared = false
 
     var body: some View {
-        ZStack {
-            // Expanding pulse ring.
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(accent.opacity(pulse ? 0 : 0.5), lineWidth: 2)
-                .scaleEffect(pulse ? 1.35 : 1.0)
-
-            // Soft glow.
-            RoundedRectangle(cornerRadius: 15, style: .continuous)
-                .fill(accent.opacity(0.35))
-                .blur(radius: 10)
-                .scaleEffect(pulse ? 1.05 : 0.95)
-
-            // The badge itself.
-            RoundedRectangle(cornerRadius: 15, style: .continuous)
-                .fill(
-                    LinearGradient(colors: [accent, accent.opacity(0.72)],
-                                   startPoint: .topLeading, endPoint: .bottomTrailing)
+        RoundedRectangle(cornerRadius: 13, style: .continuous)
+            .fill(
+                LinearGradient(
+                    colors: [accent.opacity(0.95), accent.opacity(0.78)],
+                    startPoint: .top, endPoint: .bottom
                 )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 15, style: .continuous)
-                        .stroke(Color.white.opacity(0.25), lineWidth: 1)
-                )
-                .overlay(
-                    Image(systemName: symbol)
-                        .font(.system(size: 21, weight: .semibold))
-                        .foregroundStyle(.white)
-                )
-                .shadow(color: accent.opacity(0.5), radius: 8, y: 4)
-        }
-        .frame(width: 52, height: 52)
-        .scaleEffect(appeared ? 1 : 0.4)
-        .opacity(appeared ? 1 : 0)
-        .onAppear {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) { appeared = true }
-            withAnimation(.easeOut(duration: 1.4).repeatForever(autoreverses: false)) { pulse = true }
-        }
+            )
+            .overlay(
+                // Subtle top sheen for depth.
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.22), Color.clear],
+                            startPoint: .top, endPoint: .center
+                        )
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.14), lineWidth: 0.5)
+            )
+            .overlay(
+                Image(systemName: symbol)
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(.white)
+            )
+            .frame(width: 44, height: 44)
+            .shadow(color: accent.opacity(0.35), radius: 5, y: 2)
+            .scaleEffect(appeared || forceVisible ? 1 : 0.7)
+            .opacity(appeared || forceVisible ? 1 : 0)
+            .onAppear {
+                withAnimation(.spring(response: 0.42, dampingFraction: 0.7)) { appeared = true }
+            }
     }
 }

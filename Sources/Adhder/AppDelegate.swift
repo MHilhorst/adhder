@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var statusItem: NSStatusItem?
     private var cancellables = Set<AnyCancellable>()
+    private var signalSource: DispatchSourceSignal?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         calendar.start()
@@ -18,6 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controller = NotchController(model: notchModel)
 
         setupStatusItem()
+        setupTestSignal()
 
         // Rebuild the menu whenever the calendar or auth state changes.
         calendar.$upcomingEvents
@@ -30,6 +32,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.rebuildMenu() }
             .store(in: &cancellables)
+    }
+
+    /// Allow firing a test reminder from the terminal: `kill -USR1 <pid>`.
+    private func setupTestSignal() {
+        signal(SIGUSR1, SIG_IGN)
+        let source = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: .main)
+        source.setEventHandler { [weak self] in
+            self?.notchModel.previewAlert()
+        }
+        source.resume()
+        signalSource = source
     }
 
     private func setupStatusItem() {
