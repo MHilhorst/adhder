@@ -194,7 +194,15 @@ private struct PeekView: View {
                             .foregroundStyle(.white)
                             .padding(.horizontal, 11)
                             .padding(.vertical, 5)
-                            .background(Capsule().fill(meeting.calendarColor.color))
+                            .background(
+                                Capsule().fill(
+                                    LinearGradient(
+                                        colors: [meeting.calendarColor.vividColor.brightnessScaled(1.18),
+                                                 meeting.calendarColor.vividColor.brightnessScaled(0.86)],
+                                        startPoint: .top, endPoint: .bottom
+                                    )
+                                )
+                            )
                     }
                     .buttonStyle(PressableButtonStyle())
                 }
@@ -213,4 +221,24 @@ private struct PeekView: View {
 
 extension CGColorWrapper {
     var color: Color { Color(red: red, green: green, blue: blue) }
+
+    /// A vivid, saturated version of the calendar color so themed accents always
+    /// read confidently on the black surface (avoids washed-out pastels).
+    var vividColor: Color {
+        let ns = NSColor(red: red, green: green, blue: blue, alpha: 1).usingColorSpace(.deviceRGB) ?? .systemBlue
+        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        ns.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
+        let vivid = NSColor(hue: h, saturation: min(1, max(0.6, s)), brightness: min(1, max(0.85, b)), alpha: 1)
+        return Color(nsColor: vivid)
+    }
+}
+
+extension Color {
+    /// Multiply brightness in HSB space for glossy gradient stops.
+    func brightnessScaled(_ factor: Double) -> Color {
+        let ns = NSColor(self).usingColorSpace(.deviceRGB) ?? .systemBlue
+        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        ns.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
+        return Color(nsColor: NSColor(hue: h, saturation: s, brightness: min(1, b * factor), alpha: a))
+    }
 }

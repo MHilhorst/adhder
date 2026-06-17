@@ -115,8 +115,9 @@ struct CGColorWrapper: Equatable {
             green = Double(components[1])
             blue = Double(components[2])
         } else {
-            red = 0.35
-            green = 0.59
+            // Apple system blue (#0A84FF) — vivid on a black surface.
+            red = 0.039
+            green = 0.518
             blue = 1.0
         }
     }

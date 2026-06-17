@@ -132,7 +132,15 @@ private struct PeekContent: View {
                 .foregroundStyle(.white)
                 .padding(.horizontal, 11)
                 .padding(.vertical, 5)
-                .background(Capsule().fill(meeting.calendarColor.color))
+                .background(
+                    Capsule().fill(
+                        LinearGradient(
+                            colors: [meeting.calendarColor.vividColor.brightnessScaled(1.18),
+                                     meeting.calendarColor.vividColor.brightnessScaled(0.86)],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                    )
+                )
         }
     }
 }

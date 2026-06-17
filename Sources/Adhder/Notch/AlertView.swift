@@ -7,7 +7,7 @@ struct AlertView: View {
     let meeting: MeetingEvent
     var forceVisible: Bool = false
 
-    private var accent: Color { meeting.calendarColor.color }
+    private var accent: Color { meeting.calendarColor.vividColor }
 
     private var eyebrow: String {
         if meeting.isInProgress { return "Happening now" }
@@ -67,12 +67,17 @@ struct AlertView: View {
                     .padding(.vertical, 8)
                     .background(
                         Capsule()
-                            .fill(accent)
+                            .fill(
+                                LinearGradient(
+                                    colors: [accent.brightnessScaled(1.18), accent.brightnessScaled(0.86)],
+                                    startPoint: .top, endPoint: .bottom
+                                )
+                            )
                             .overlay(
-                                Capsule().strokeBorder(Color.white.opacity(0.18), lineWidth: 0.5)
+                                Capsule().strokeBorder(Color.white.opacity(0.22), lineWidth: 0.5)
                             )
                     )
-                    .shadow(color: accent.opacity(0.3), radius: 3, y: 1)
+                    .shadow(color: accent.opacity(0.35), radius: 4, y: 1)
                 }
                 .buttonStyle(PressableButtonStyle())
             }
