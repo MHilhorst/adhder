@@ -14,7 +14,9 @@ final class NotchPanel: NSPanel {
         )
 
         isFloatingPanel = true
-        level = .statusBar
+        // Above the menu bar so the panel's black top merges seamlessly with the
+        // physical notch and appears to grow out of it (rather than floating below).
+        level = NSWindow.Level(rawValue: Int(CGShieldingWindowLevel()))
         isOpaque = false
         backgroundColor = .clear
         hasShadow = false
@@ -144,7 +146,7 @@ final class NotchController {
             sidePadding = 0
             bottomPadding = 0
         case .peek:
-            contentSize = CGSize(width: max(geometry.notchWidth + 210, 400), height: geometry.notchHeight + 34)
+            contentSize = CGSize(width: max(geometry.notchWidth + 200, 400), height: geometry.notchHeight + 46)
             sidePadding = 36
             bottomPadding = 34
         case .alert:
