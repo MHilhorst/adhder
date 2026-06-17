@@ -45,7 +45,16 @@ echo "==> Signing DMG"
 codesign --force --sign "$CODESIGN_IDENTITY" --timestamp "$DMG"
 
 echo "==> Submitting to Apple notary service (this can take a few minutes)"
-xcrun notarytool submit "$DMG" --keychain-profile "$PROFILE" --wait
+# CI uses inline credentials from env; locally we use a stored keychain profile.
+if [[ -n "${NOTARY_APPLE_ID:-}" && -n "${NOTARY_TEAM_ID:-}" && -n "${NOTARY_PASSWORD:-}" ]]; then
+  xcrun notarytool submit "$DMG" \
+    --apple-id "$NOTARY_APPLE_ID" \
+    --team-id "$NOTARY_TEAM_ID" \
+    --password "$NOTARY_PASSWORD" \
+    --wait
+else
+  xcrun notarytool submit "$DMG" --keychain-profile "$PROFILE" --wait
+fi
 
 echo "==> Stapling ticket"
 xcrun stapler staple "$DMG"
