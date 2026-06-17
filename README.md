@@ -90,6 +90,23 @@ A stapled, notarized DMG installs with a normal double-click on any Mac. Without
 notarization, first launch requires right-click -> Open (or
 `xattr -dr com.apple.quarantine /Applications/Adhder.app`).
 
+### Automated releases (GitHub Actions)
+
+`.github/workflows/release.yml` builds, signs, notarizes, staples, and attaches a
+DMG to a GitHub Release whenever you push a `v*` tag. Add these repo secrets once
+(Settings -> Secrets and variables -> Actions):
+
+| Secret | Value |
+|--------|-------|
+| `DEVELOPER_ID_CERT_P12` | base64 of your exported Developer ID `.p12` (`base64 -i cert.p12`) |
+| `DEVELOPER_ID_CERT_PASSWORD` | password used when exporting the `.p12` |
+| `CODESIGN_IDENTITY` | `Developer ID Application: Your Name (TEAMID)` |
+| `NOTARY_APPLE_ID` | your Apple ID email |
+| `NOTARY_TEAM_ID` | your 10-char Team ID |
+| `NOTARY_PASSWORD` | an app-specific password |
+
+Then: `git tag v1.1 && git push origin v1.1` — the release builds itself.
+
 ### Install
 Open the DMG and drag **Adhder** to **Applications**, then launch it. It lives in
 the menu bar (no Dock icon). Grant Calendar access on first launch, and use
