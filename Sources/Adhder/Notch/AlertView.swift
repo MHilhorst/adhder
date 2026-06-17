@@ -77,19 +77,6 @@ struct AlertView: View {
             }
         }
         .padding(.leading, 4)
-        .overlay(alignment: .topTrailing) {
-            Button {
-                model.dismissAlert()
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.45))
-                    .frame(width: 18, height: 18)
-                    .background(Circle().fill(Color.white.opacity(0.08)))
-            }
-            .buttonStyle(.plain)
-            .offset(x: 2, y: -6)
-        }
     }
 }
 

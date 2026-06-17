@@ -92,6 +92,17 @@ private struct NotchSnapshot: View {
                 content.padding(contentInsets)
             }
             .frame(width: size.width, height: size.height)
+            .overlay(alignment: .topTrailing) {
+                if state == .alert {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .frame(width: 18, height: 18)
+                        .background(Circle().fill(Color.white.opacity(0.1)))
+                        .padding(.trailing, 14)
+                        .frame(height: geometry.notchHeight, alignment: .center)
+                }
+            }
             .padding(.top, 6)
         }
     }

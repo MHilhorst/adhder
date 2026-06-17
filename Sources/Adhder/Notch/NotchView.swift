@@ -66,6 +66,23 @@ struct NotchView: View {
                     .blur(radius: contentVisible ? 0 : 4)
             }
             .frame(width: size.width, height: size.height)
+            // Dismiss sits up in the notch-bar strip, in the empty space beside the notch.
+            .overlay(alignment: .topTrailing) {
+                if model.presentation == .alert {
+                    Button { model.dismissAlert() } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(.white.opacity(0.5))
+                            .frame(width: 18, height: 18)
+                            .background(Circle().fill(Color.white.opacity(0.1)))
+                            .contentShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.trailing, 14)
+                    .frame(height: geometry.notchHeight, alignment: .center)
+                    .opacity(contentVisible ? 1 : 0)
+                }
+            }
             .animation(.spring(response: 0.42, dampingFraction: 0.68), value: model.presentation)
 
             Spacer(minLength: 0)
