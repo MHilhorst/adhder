@@ -26,7 +26,6 @@ enum RenderMode {
 
         render(NotchPreview(state: .alert, meeting: sample), to: "\(dir)/alert.png", size: CGSize(width: 580, height: 260))
         render(NotchPreview(state: .peek, meeting: sample), to: "\(dir)/peek.png", size: CGSize(width: 580, height: 120))
-        render(CharacterPreview(), to: "\(dir)/character.png", size: CGSize(width: 240, height: 240))
         return true
     }
 
@@ -83,16 +82,6 @@ private struct NotchPreview: View {
     }
 }
 
-private struct CharacterPreview: View {
-    var body: some View {
-        ZStack {
-            Color.black
-            PipCharacter(accent: Color(red: 0.35, green: 0.59, blue: 1.0), isWaving: true)
-                .scaleEffect(2.2)
-        }
-    }
-}
-
 /// Static (non-animated) mirrors of the live content for deterministic snapshots.
 private struct AlertPreviewContent: View {
     let meeting: MeetingEvent
@@ -100,7 +89,7 @@ private struct AlertPreviewContent: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            PipCharacter(accent: accent, isWaving: true).frame(width: 64, height: 64)
+            MeetingGlyph(accent: accent).frame(width: 64, height: 64)
             VStack(alignment: .leading, spacing: 6) {
                 Text("STARTING ANY SECOND NOW!")
                     .font(.system(size: 12, weight: .bold)).foregroundStyle(accent).tracking(0.4)

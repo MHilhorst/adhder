@@ -16,7 +16,7 @@ struct AlertView: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            PipCharacter(accent: accent, isWaving: true)
+            MeetingGlyph(accent: accent)
                 .frame(width: 64, height: 64)
 
             VStack(alignment: .leading, spacing: 6) {
