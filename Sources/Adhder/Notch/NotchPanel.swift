@@ -47,8 +47,10 @@ final class NotchController {
         self.model = model
         self.geometry = NotchGeometry.resolve()
 
-        let initial = NotchController.frame(for: .collapsed, geometry: geometry)
-        self.panel = NotchPanel(contentRect: initial)
+        // The window is FIXED at the largest state's size, pinned over the notch.
+        // Only the SwiftUI shape inside animates, so the island blooms from the
+        // notch center instead of the window edges sliding outward.
+        self.panel = NotchPanel(contentRect: NotchController.fixedFrame(geometry: geometry))
         // Idle notch must never intercept clicks or hover over the menu bar.
         panel.ignoresMouseEvents = true
 
@@ -60,6 +62,22 @@ final class NotchController {
         panel.orderFrontRegardless()
         observe()
         startHoverPolling()
+    }
+
+    /// Rect of the currently-visible pill (for hover hit-testing), in screen coords.
+    private func visibleRect(for presentation: NotchViewModel.Presentation) -> NSRect {
+        let screen = geometry.screenFrame
+        let w: CGFloat
+        let h: CGFloat
+        switch presentation {
+        case .collapsed:
+            w = geometry.notchWidth + 16; h = geometry.notchHeight + 12
+        case .peek:
+            w = max(geometry.notchWidth + 200, 400); h = geometry.notchHeight + 46
+        case .alert:
+            w = 440; h = geometry.notchHeight + 78
+        }
+        return NSRect(x: screen.midX - w / 2, y: screen.maxY - h, width: w, height: h)
     }
 
     /// Poll the cursor instead of relying on window hover, so the collapsed
@@ -75,23 +93,15 @@ final class NotchController {
         guard model.activeAlert == nil else { return }
 
         let mouse = NSEvent.mouseLocation
-        let screen = geometry.screenFrame
-        let triggerWidth = geometry.notchWidth + 16
-        let triggerRect = NSRect(
-            x: screen.midX - triggerWidth / 2,
-            y: screen.maxY - (geometry.notchHeight + 12),
-            width: triggerWidth,
-            height: geometry.notchHeight + 12
-        )
 
         switch model.presentation {
         case .collapsed:
-            if triggerRect.contains(mouse) {
+            if visibleRect(for: .collapsed).contains(mouse) {
                 model.hoverChanged(true)
             }
         case .peek:
-            // Stay open while the cursor is anywhere over the expanded panel.
-            if !panel.frame.insetBy(dx: -4, dy: -4).contains(mouse) {
+            // Collapse once the cursor leaves the visible peek pill.
+            if !visibleRect(for: .peek).insetBy(dx: -6, dy: -6).contains(mouse) {
                 model.hoverChanged(false)
             }
         case .alert:
@@ -104,7 +114,8 @@ final class NotchController {
             .removeDuplicates()
             .receive(on: RunLoop.main)
             .sink { [weak self] presentation in
-                self?.resize(to: presentation)
+                // Click-through when collapsed; interactive (buttons) when expanded.
+                self?.panel.ignoresMouseEvents = (presentation == .collapsed)
             }
             .store(in: &cancellables)
 
@@ -114,53 +125,20 @@ final class NotchController {
             .sink { [weak self] _ in
                 guard let self else { return }
                 self.geometry = NotchGeometry.resolve()
-                self.resize(to: self.model.presentation)
+                self.panel.setFrame(NotchController.fixedFrame(geometry: self.geometry), display: true)
             }
             .store(in: &cancellables)
     }
 
-    private func resize(to presentation: NotchViewModel.Presentation) {
-        // Click-through when collapsed; interactive (buttons) when expanded.
-        panel.ignoresMouseEvents = (presentation == .collapsed)
-
-        let frame = NotchController.frame(for: presentation, geometry: geometry)
-        NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = 0.42
-            ctx.timingFunction = CAMediaTimingFunction(controlPoints: 0.32, 0.9, 0.32, 1)
-            panel.animator().setFrame(frame, display: true)
-        }
-    }
-
-    /// Compute the panel frame for a given state, centered on the notch and pinned to the top.
-    /// Collapsed keeps the window tiny (just a hover strip under the notch) so the
-    /// transparent panel never intercepts clicks or covers content across the top of the screen.
-    private static func frame(for presentation: NotchViewModel.Presentation,
-                              geometry: NotchGeometry) -> NSRect {
-        let contentSize: CGSize
-        let sidePadding: CGFloat
-        let bottomPadding: CGFloat
-
-        switch presentation {
-        case .collapsed:
-            contentSize = CGSize(width: geometry.notchWidth, height: geometry.notchHeight + 10)
-            sidePadding = 0
-            bottomPadding = 0
-        case .peek:
-            contentSize = CGSize(width: max(geometry.notchWidth + 200, 400), height: geometry.notchHeight + 46)
-            sidePadding = 36
-            bottomPadding = 34
-        case .alert:
-            contentSize = CGSize(width: 430, height: geometry.notchHeight + 72)
-            sidePadding = 44
-            bottomPadding = 44
-        }
-
-        let totalWidth = contentSize.width + sidePadding * 2
-        let totalHeight = contentSize.height + bottomPadding
-
+    /// A single fixed window frame, sized for the largest state and pinned so its
+    /// top edge sits at the very top of the screen (merging with the notch). The
+    /// window never resizes; the SwiftUI shape inside animates from the center.
+    private static func fixedFrame(geometry: NotchGeometry) -> NSRect {
+        let width: CGFloat = 600
+        let height: CGFloat = geometry.notchHeight + 150
         let screen = geometry.screenFrame
-        let x = screen.midX - totalWidth / 2
-        let y = screen.maxY - totalHeight
-        return NSRect(x: x, y: y, width: totalWidth, height: totalHeight)
+        let x = screen.midX - width / 2
+        let y = screen.maxY - height
+        return NSRect(x: x, y: y, width: width, height: height)
     }
 }
