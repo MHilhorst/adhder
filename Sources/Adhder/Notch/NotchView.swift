@@ -9,7 +9,9 @@ struct NotchView: View {
     private var size: CGSize {
         switch model.presentation {
         case .collapsed:
-            return CGSize(width: geometry.notchWidth, height: geometry.notchHeight)
+            // A touch wider than the bare notch so the drop-down phase reads as a
+            // stem descending straight from the notch.
+            return CGSize(width: geometry.notchWidth + 30, height: geometry.notchHeight)
         case .peek:
             return CGSize(width: max(geometry.notchWidth + 200, 400), height: geometry.notchHeight + 46)
         case .alert:
