@@ -39,6 +39,9 @@ struct NotchView: View {
         }
     }
 
+    @State private var contentVisible = false
+    @State private var contentRevealWork: DispatchWorkItem?
+
     var body: some View {
         VStack(spacing: 0) {
             ZStack(alignment: .top) {
@@ -55,17 +58,40 @@ struct NotchView: View {
                     .shadow(color: .black.opacity(shadowOpacity),
                             radius: model.presentation == .alert ? 22 : 10, y: 8)
 
+                // Content is revealed only after the box has bloomed open.
                 content
                     .padding(contentInsets)
+                    .opacity(contentVisible ? 1 : 0)
+                    .offset(y: contentVisible ? 0 : -8)
+                    .blur(radius: contentVisible ? 0 : 4)
             }
             .frame(width: size.width, height: size.height)
-            .animation(.spring(response: 0.5, dampingFraction: 0.74), value: model.presentation)
+            .animation(.spring(response: 0.42, dampingFraction: 0.68), value: model.presentation)
 
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .onHover { model.hoverChanged($0) }
         .contentShape(Rectangle())
+        .onChange(of: model.presentation) { _, newValue in
+            stageContentReveal(for: newValue)
+        }
+    }
+
+    /// Two-phase motion: the box expands first, then the content fades/slides in.
+    private func stageContentReveal(for presentation: NotchViewModel.Presentation) {
+        contentRevealWork?.cancel()
+        if presentation == .collapsed {
+            withAnimation(.easeOut(duration: 0.12)) { contentVisible = false }
+            return
+        }
+        // Hide immediately, then reveal once the box has had time to open.
+        contentVisible = false
+        let work = DispatchWorkItem {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { contentVisible = true }
+        }
+        contentRevealWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.22, execute: work)
     }
 
     @ViewBuilder
@@ -75,11 +101,9 @@ struct NotchView: View {
             CollapsedIndicator(model: model)
         case .peek:
             PeekView(model: model)
-                .transition(.opacity.combined(with: .scale(scale: 0.96)))
         case .alert:
             if let meeting = model.activeAlert {
                 AlertView(model: model, meeting: meeting)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
     }
