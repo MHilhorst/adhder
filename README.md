@@ -72,9 +72,23 @@ open build/Adhder.app
 ```
 
 The app is ad-hoc signed with a hardened runtime, which is enough to run on your
-own Mac and to receive the Calendar (EventKit) permission prompt. To distribute
-to other machines without Gatekeeper warnings you'd sign with a Developer ID
-certificate and notarize; that's a drop-in change to `scripts/build_app.sh`.
+own Mac and to receive the Calendar (EventKit) permission prompt.
+
+### Signed + notarized release (for distribution)
+
+```bash
+# One-time: install a "Developer ID Application" cert, then store credentials:
+xcrun notarytool store-credentials adhder-notary \
+  --apple-id "you@example.com" --team-id "TEAMID" --password "app-specific-pw"
+
+# Build, sign, notarize, and staple a distributable DMG:
+CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
+  ./scripts/notarize.sh
+```
+
+A stapled, notarized DMG installs with a normal double-click on any Mac. Without
+notarization, first launch requires right-click -> Open (or
+`xattr -dr com.apple.quarantine /Applications/Adhder.app`).
 
 ### Install
 Open the DMG and drag **Adhder** to **Applications**, then launch it. It lives in

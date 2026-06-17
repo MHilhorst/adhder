@@ -30,13 +30,22 @@ if [[ -f "$ROOT/scripts/AppIcon.icns" ]]; then
   cp "$ROOT/scripts/AppIcon.icns" "$CONTENTS/Resources/AppIcon.icns"
 fi
 
-echo "==> Code signing (ad-hoc)"
-codesign --force --sign - \
-  --entitlements "$ROOT/scripts/Adhder.entitlements" \
-  --options runtime \
-  "$APP" 2>/dev/null || \
-codesign --force --sign - \
-  --entitlements "$ROOT/scripts/Adhder.entitlements" \
-  "$APP"
+# Use a Developer ID identity if provided (for notarization), else ad-hoc.
+if [[ -n "${CODESIGN_IDENTITY:-}" ]]; then
+  echo "==> Code signing (Developer ID: $CODESIGN_IDENTITY)"
+  codesign --force --deep --sign "$CODESIGN_IDENTITY" \
+    --entitlements "$ROOT/scripts/Adhder.entitlements" \
+    --options runtime --timestamp \
+    "$APP"
+else
+  echo "==> Code signing (ad-hoc)"
+  codesign --force --sign - \
+    --entitlements "$ROOT/scripts/Adhder.entitlements" \
+    --options runtime \
+    "$APP" 2>/dev/null || \
+  codesign --force --sign - \
+    --entitlements "$ROOT/scripts/Adhder.entitlements" \
+    "$APP"
+fi
 
 echo "==> Done: $APP"
