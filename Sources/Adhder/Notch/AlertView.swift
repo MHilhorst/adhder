@@ -47,8 +47,7 @@ struct AlertView: View {
                 .font(.system(size: 11.5, weight: .medium))
                 .foregroundStyle(.white.opacity(0.5))
             }
-
-            Spacer(minLength: 10)
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             if meeting.joinURL != nil {
                 Button {

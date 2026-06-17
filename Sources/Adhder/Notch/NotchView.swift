@@ -13,7 +13,7 @@ struct NotchView: View {
         case .peek:
             return CGSize(width: max(geometry.notchWidth + 200, 400), height: geometry.notchHeight + 46)
         case .alert:
-            return CGSize(width: 440, height: geometry.notchHeight + 78)
+            return CGSize(width: 410, height: geometry.notchHeight + 78)
         }
     }
 
@@ -41,6 +41,12 @@ struct NotchView: View {
 
     @State private var contentVisible = false
     @State private var contentRevealWork: DispatchWorkItem?
+    // Box dimensions animate independently so the island can drop down first,
+    // then expand its sides.
+    @State private var boxWidth: CGFloat = 0
+    @State private var boxHeight: CGFloat = 0
+    @State private var boxFillOpacity: Double = 0
+    @State private var didInitBox = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -49,13 +55,13 @@ struct NotchView: View {
                 // window text beside the physical notch. The dark surface only
                 // appears when expanded into peek/alert.
                 NotchShape(bottomRadius: bottomRadius, topRadius: 10)
-                    .fill(surfaceColor)
+                    .fill(Color.black.opacity(boxFillOpacity))
                     .overlay(
                         NotchShape(bottomRadius: bottomRadius, topRadius: 10)
                             .stroke(strokeGradient, lineWidth: 0.8)
-                            .opacity(model.presentation == .collapsed ? 0 : 1)
+                            .opacity(boxFillOpacity)
                     )
-                    .shadow(color: .black.opacity(shadowOpacity),
+                    .shadow(color: .black.opacity(0.45 * boxFillOpacity),
                             radius: model.presentation == .alert ? 22 : 10, y: 8)
 
                 // Content is revealed only after the box has bloomed open.
@@ -65,33 +71,65 @@ struct NotchView: View {
                     .offset(y: contentVisible ? 0 : -8)
                     .blur(radius: contentVisible ? 0 : 4)
             }
-            .frame(width: size.width, height: size.height)
+            .frame(width: boxWidth, height: boxHeight)
             // Dismiss sits up in the notch-bar strip, in the empty space beside the notch.
             .overlay(alignment: .topTrailing) {
                 if model.presentation == .alert {
                     Button { model.dismissAlert() } label: {
                         Image(systemName: "xmark")
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundStyle(.white.opacity(0.5))
-                            .frame(width: 18, height: 18)
-                            .background(Circle().fill(Color.white.opacity(0.1)))
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(.white.opacity(0.6))
+                            .frame(width: 26, height: 26)
+                            .background(Circle().fill(Color.white.opacity(0.12)))
                             .contentShape(Circle())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(PressableButtonStyle())
                     .padding(.trailing, 14)
                     .frame(height: geometry.notchHeight, alignment: .center)
                     .opacity(contentVisible ? 1 : 0)
                 }
             }
-            .animation(.spring(response: 0.42, dampingFraction: 0.68), value: model.presentation)
 
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .onHover { model.hoverChanged($0) }
         .contentShape(Rectangle())
+        .onAppear {
+            if !didInitBox {
+                boxWidth = size.width
+                boxHeight = size.height
+                boxFillOpacity = model.presentation == .collapsed ? 0 : 1
+                didInitBox = true
+            }
+        }
         .onChange(of: model.presentation) { _, newValue in
+            stageBox(for: newValue)
             stageContentReveal(for: newValue)
+        }
+    }
+
+    /// Stage the box growth: when opening, the notch first drops DOWN (height),
+    /// then the SIDES expand (width). Collapsing reverses the order.
+    private func stageBox(for presentation: NotchViewModel.Presentation) {
+        let target = size
+        let expanding = presentation != .collapsed
+        if expanding {
+            // Surface appears immediately, drops DOWN (height), then sides expand.
+            boxFillOpacity = 1
+            withAnimation(.spring(response: 0.34, dampingFraction: 0.74)) { boxHeight = target.height }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) {
+                withAnimation(.spring(response: 0.42, dampingFraction: 0.7)) { boxWidth = target.width }
+            }
+        } else {
+            // Retract the sides first, then lift the height and fade out into the notch.
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) { boxWidth = target.width }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                withAnimation(.spring(response: 0.34, dampingFraction: 0.84)) {
+                    boxHeight = target.height
+                    boxFillOpacity = 0
+                }
+            }
         }
     }
 
@@ -108,7 +146,8 @@ struct NotchView: View {
             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { contentVisible = true }
         }
         contentRevealWork = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.22, execute: work)
+        // Reveal only after the box has dropped and its sides have expanded.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.34, execute: work)
     }
 
     @ViewBuilder
@@ -122,18 +161,6 @@ struct NotchView: View {
             if let meeting = model.activeAlert {
                 AlertView(model: model, meeting: meeting)
             }
-        }
-    }
-
-    private var surfaceColor: Color {
-        model.presentation == .collapsed ? Color.clear : Color.black
-    }
-
-    private var shadowOpacity: Double {
-        switch model.presentation {
-        case .collapsed: return 0
-        case .peek: return 0.25
-        case .alert: return 0.45
         }
     }
 

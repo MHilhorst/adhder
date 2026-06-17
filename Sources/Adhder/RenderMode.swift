@@ -60,7 +60,7 @@ private struct NotchSnapshot: View {
         switch state {
         case .collapsed: return CGSize(width: geometry.notchWidth, height: geometry.notchHeight)
         case .peek: return CGSize(width: max(geometry.notchWidth + 200, 400), height: geometry.notchHeight + 46)
-        case .alert: return CGSize(width: 440, height: geometry.notchHeight + 78)
+        case .alert: return CGSize(width: 410, height: geometry.notchHeight + 78)
         }
     }
 
@@ -95,10 +95,10 @@ private struct NotchSnapshot: View {
             .overlay(alignment: .topTrailing) {
                 if state == .alert {
                     Image(systemName: "xmark")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.5))
-                        .frame(width: 18, height: 18)
-                        .background(Circle().fill(Color.white.opacity(0.1)))
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.6))
+                        .frame(width: 26, height: 26)
+                        .background(Circle().fill(Color.white.opacity(0.12)))
                         .padding(.trailing, 14)
                         .frame(height: geometry.notchHeight, alignment: .center)
                 }
